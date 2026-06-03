@@ -1,6 +1,17 @@
 /**
- * Tiny dependency-free validation helpers + a request-body validator.
- * Throws ApiError(400) with field-level details on failure.
+ * Tiny dependency-free validation helpers + request-body validator.
+ *
+ * This module provides:
+ * - Individual type checkers (email, UUID, password, names, etc.)
+ * - A generic validateBody() function that validates request payloads
+ * - Throws ApiError(400) with field-level details on failure
+ * 
+ * Usage:
+ *   const data = validateBody(req.body, {
+ *     email: { required: true, type: 'email' },
+ *     name: { type: 'name', maxLen: 80 },
+ *     age: { type: 'integer', min: 18, max: 120 },
+ *   });
  */
 const { ApiError } = require('./http');
 

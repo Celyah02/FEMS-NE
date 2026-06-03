@@ -1,4 +1,17 @@
-/** Authentication: register, login, refresh, logout, password recovery. */
+/**
+ * Authentication Controller — User registration, login, token refresh, logout, and password recovery.
+ *
+ * All passwords are hashed with bcryptjs (10 rounds) before storage.
+ * Access tokens expire after 1 hour; refresh tokens can be revoked.
+ *
+ * SECURITY NOTES:
+ * - Login uses bcrypt.compare() to safely verify passwords (timing-attack resistant)
+ * - Refresh token invalidation prevents use of stolen tokens
+ * - Password resets are 1-hour tokens issued for account recovery
+ * - TODO (production): Email reset tokens instead of returning in API response
+ * - TODO (production): Rate limiting on login/register to prevent brute force (implemented in routes)
+ * - TODO (production): 2FA support for elevated security
+ */
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { query, ApiError, asyncHandler, validateBody } = require('@fems/shared');
@@ -81,8 +94,20 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 // POST /auth/forgot-password
-// No email service is wired up for the demo, so the reset token is returned in
-// the response. In production this would be emailed and never exposed via API.
+/**
+ * Issue a password reset token for account recovery.
+ *
+ * IMPORTANT: This is a DEMO implementation. For production:
+ * - Send the reset token via secure email instead of returning in response
+ * - Use a dedicated email service (SendGrid, AWS SES, etc.)
+ * - Never expose the token in logs or API responses
+ * - Implement token expiry cleanup to prevent DB bloat
+ *
+ * Current behavior (demo-only):
+ * - Returns a 24-character hex token in the response
+ * - Token expires after 1 hour
+ * - Generic response for security (doesn't leak if email exists)
+ */
 const forgotPassword = asyncHandler(async (req, res) => {
   const data = validateBody(req.body, { email: { required: true, type: 'email', maxLen: 255, lowercase: true } });
   const { rows } = await query('SELECT id FROM users WHERE lower(email) = lower($1)', [data.email]);
