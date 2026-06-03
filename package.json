@@ -1,0 +1,37 @@
+{
+  "name": "fems-local",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local development runner for the Fire Extinguisher Management System",
+  "workspaces": [
+    "shared",
+    "db",
+    "frontend",
+    "services/gateway",
+    "services/user-service",
+    "services/extinguisher-service",
+    "services/inspection-service",
+    "services/reporting-service",
+    "services/notification-service"
+  ],
+  "scripts": {
+    "db:migrate": "npm --workspace fems-db run migrate",
+    "db:seed": "npm --workspace fems-db run seed",
+    "db:reset": "npm --workspace fems-db run reset",
+    "dev:backend": "powershell -ExecutionPolicy Bypass -File scripts/dev-backend.ps1",
+    "dev:frontend": "npm --workspace fems-frontend run dev",
+    "build:frontend": "npm --workspace fems-frontend run build",
+    "start:frontend": "npm --workspace fems-frontend run start",
+    "test": "jest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@next/swc-win32-x64-msvc": "14.2.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  }
+}

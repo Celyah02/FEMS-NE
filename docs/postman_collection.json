@@ -1,0 +1,135 @@
+{
+  "info": {
+    "name": "TZW FEMS — Fire Extinguisher Management System",
+    "description": "RESTful microservices API (via API gateway). Run 'Auth / Login' first; it saves {{accessToken}} automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "extinguisherId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@tzw.com\",\n  \"password\": \"Password123!\"\n}" }
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "pm.test('has access token', () => pm.expect(json.accessToken).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tzw.com\",\n  \"password\": \"Password123!\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@tzw.com\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        { "name": "Get my profile", "request": { "method": "GET", "url": "{{baseUrl}}/users/me" } },
+        { "name": "Update my profile", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/me", "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Ada\"\n}" } } },
+        { "name": "Change password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/users/me/change-password", "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"Password456!\"\n}" } } },
+        { "name": "List users (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/users" } }
+      ]
+    },
+    {
+      "name": "Extinguishers",
+      "item": [
+        {
+          "name": "List",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const j = pm.response.json();", "if (j.extinguishers && j.extinguishers[0]) pm.collectionVariables.set('extinguisherId', j.extinguishers[0].id);"] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/extinguishers" }
+        },
+        { "name": "Get by id", "request": { "method": "GET", "url": "{{baseUrl}}/extinguishers/{{extinguisherId}}" } },
+        { "name": "Create", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/extinguishers", "body": { "mode": "raw", "raw": "{\n  \"serialNumber\": \"FE-9001\",\n  \"location\": \"Test Lab\",\n  \"type\": \"co2\",\n  \"size\": \"5lb\",\n  \"installationDate\": \"2026-01-01\",\n  \"expiryDate\": \"2031-01-01\"\n}" } } },
+        { "name": "Update", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/extinguishers/{{extinguisherId}}", "body": { "mode": "raw", "raw": "{\n  \"status\": \"maintenance\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": "{{baseUrl}}/extinguishers/{{extinguisherId}}" } }
+      ]
+    },
+    {
+      "name": "Inspections & Maintenance",
+      "item": [
+        { "name": "Schedule inspection", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/inspections", "body": { "mode": "raw", "raw": "{\n  \"extinguisherId\": \"{{extinguisherId}}\",\n  \"scheduledDate\": \"2026-07-01\",\n  \"scheduledTime\": \"10:00\"\n}" } } },
+        { "name": "List inspections", "request": { "method": "GET", "url": "{{baseUrl}}/inspections" } },
+        { "name": "Complete inspection", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/inspections/:id/complete", "body": { "mode": "raw", "raw": "{\n  \"result\": \"pass\"\n}" } } },
+        { "name": "Log maintenance", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/maintenance", "body": { "mode": "raw", "raw": "{\n  \"extinguisherId\": \"{{extinguisherId}}\",\n  \"actionTaken\": \"Recharged cylinder\",\n  \"maintenanceDate\": \"2026-06-03\",\n  \"issuesIdentified\": \"Low pressure\"\n}" } } },
+        { "name": "List maintenance", "request": { "method": "GET", "url": "{{baseUrl}}/maintenance" } }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Summary", "request": { "method": "GET", "url": "{{baseUrl}}/reports/summary" } },
+        { "name": "Inventory", "request": { "method": "GET", "url": "{{baseUrl}}/reports/inventory" } },
+        { "name": "Inspections", "request": { "method": "GET", "url": "{{baseUrl}}/reports/inspections" } },
+        { "name": "Compliance", "request": { "method": "GET", "url": "{{baseUrl}}/reports/compliance" } },
+        { "name": "Maintenance", "request": { "method": "GET", "url": "{{baseUrl}}/reports/maintenance" } },
+        { "name": "Export inventory CSV", "request": { "method": "GET", "url": "{{baseUrl}}/reports/inventory/export?format=csv" } },
+        { "name": "Export compliance PDF", "request": { "method": "GET", "url": "{{baseUrl}}/reports/compliance/export?format=pdf" } }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        { "name": "List", "request": { "method": "GET", "url": "{{baseUrl}}/notifications" } },
+        { "name": "Mark all read", "request": { "method": "POST", "url": "{{baseUrl}}/notifications/read-all" } }
+      ]
+    }
+  ]
+}
