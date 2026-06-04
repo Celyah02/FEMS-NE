@@ -40,7 +40,15 @@ function createApp({ serviceName, mountRoutes, openapi }) {
           ? corsOrigin.split(',').map((s) => s.trim()) // Allow comma-separated list
           : corsOrigin === '*'
           ? '*'
-          : ['http://localhost:3000', 'http://localhost:3001'], // Localhost defaults
+          : [
+              'http://localhost:3000',
+              'http://localhost:3001',
+              'http://localhost:4001',
+              'http://localhost:4002',
+              'http://localhost:4003',
+              'http://localhost:4004',
+              'http://localhost:4005',
+            ], // Localhost defaults
       credentials: true,
       methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],

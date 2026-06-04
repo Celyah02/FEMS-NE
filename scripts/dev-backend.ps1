@@ -25,11 +25,17 @@ foreach ($process in $processes) {
     continue
   }
 
-  Start-Process powershell -ArgumentList @(
-    "-NoExit",
-    "-ExecutionPolicy", "Bypass",
-    "-Command", $command
-  )
+  # Start-Process powershell -ArgumentList @(
+  #   "-NoExit",
+  #   "-ExecutionPolicy", "Bypass",
+  #   "-Command", $command
+  # )
+
+  Start-Process "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ArgumentList @(
+  "-NoExit",
+  "-ExecutionPolicy", "Bypass",
+  "-Command", $command
+)
 }
 
 if ($WhatIf) {

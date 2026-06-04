@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { StatusBadge, Spinner, EmptyState, Modal, Field, Alert } from '@/components/ui';
@@ -17,6 +18,9 @@ export default function ExtinguishersPage() {
   const canDelete = user.role === 'admin';
 
   const [items, setItems] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [filters, setFilters] = useState({ q: '', status: '', type: '' });
   const [modal, setModal] = useState(null); // { mode: 'create'|'edit', data }
   const [form, setForm] = useState(empty);
@@ -28,11 +32,17 @@ export default function ExtinguishersPage() {
     if (filters.q) qs.set('q', filters.q);
     if (filters.status) qs.set('status', filters.status);
     if (filters.type) qs.set('type', filters.type);
+    qs.set('limit', limit);
+    qs.set('offset', (page - 1) * limit);
     const res = await api.get(`/extinguishers?${qs.toString()}`);
     setItems(res.extinguishers);
-  }, [filters]);
+    setTotal(res.total);
+  }, [filters, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [filters]);
 
   function openCreate() { setForm(empty); setError(''); setModal({ mode: 'create' }); }
   function openEdit(x) {
@@ -95,7 +105,8 @@ export default function ExtinguishersPage() {
                 <tr>
                   <th className="px-4 py-3">Serial</th><th className="px-4 py-3">Location</th>
                   <th className="px-4 py-3">Type</th><th className="px-4 py-3">Size</th>
-                  <th className="px-4 py-3">Expiry</th><th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Installed</th><th className="px-4 py-3">Expiry</th>
+                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -106,9 +117,11 @@ export default function ExtinguishersPage() {
                     <td className="px-4 py-3">{x.location}</td>
                     <td className="px-4 py-3 capitalize">{x.type.replace('_', ' ')}</td>
                     <td className="px-4 py-3">{x.size}</td>
+                    <td className="px-4 py-3">{x.installationDate?.slice(0, 10)}</td>
                     <td className="px-4 py-3">{x.expiryDate?.slice(0, 10)}</td>
                     <td className="px-4 py-3"><StatusBadge value={x.status} /></td>
                     <td className="px-4 py-3 text-right">
+                      <Link href={`/extinguishers/${x.id}`} className="btn-ghost px-2 py-1 text-xs">View</Link>
                       {canEdit && <button className="btn-ghost px-2 py-1 text-xs" onClick={() => openEdit(x)}>Edit</button>}
                       {canDelete && <button className="btn-ghost px-2 py-1 text-xs text-red-600" onClick={() => remove(x)}>Delete</button>}
                     </td>
@@ -120,6 +133,30 @@ export default function ExtinguishersPage() {
         )}
       </div>
 
+      {total > limit && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-slate-500">
+            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="btn-secondary px-3 py-1 text-xs"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </button>
+            <button
+              className="btn-secondary px-3 py-1 text-xs"
+              disabled={page * limit >= total}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       <Modal open={!!modal} onClose={() => setModal(null)}
         title={modal?.mode === 'create' ? 'Add extinguisher' : 'Edit extinguisher'}
         footer={<>
@@ -130,7 +167,7 @@ export default function ExtinguishersPage() {
           <Alert>{error}</Alert>
           <Field label="Serial number">
             <input className="input" value={form.serialNumber} onChange={set('serialNumber')}
-              required maxLength={64} pattern={"[A-Za-z0-9][A-Za-z0-9-]{0,63}"}
+              required maxLength={64} pattern={"[A-Za-z0-9][A-Za-z0-9\\-]{0,63}"}
               title="Letters/numbers/hyphens only (max 64)."
             />
           </Field>

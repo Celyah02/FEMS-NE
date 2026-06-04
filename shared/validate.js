@@ -19,7 +19,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Names: letters with optional separators (space, hyphen, apostrophe) between parts.
 const NAME_RE = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
 // Serial/code: allow alnum + hyphen, must start with alnum.
-const SERIAL_RE = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
+const SERIAL_RE = /^[A-Za-z0-9][A-Za-z0-9\-]{0,63}$/;
 // hh:mm or hh:mm:ss (24h)
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 // Disallow ASCII control chars in free text.

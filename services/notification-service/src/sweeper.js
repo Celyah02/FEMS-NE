@@ -185,7 +185,7 @@ async function sweepMaintenanceReminders() {
     const tooOld = await query(
       `SELECT
          CASE
-           WHEN $1::date IS NULL THEN TRUE
+           WHEN $1::text IS NULL OR $1::text = '' THEN TRUE
            ELSE ($1::date < (CURRENT_DATE - ($2 || ' days')::interval))
          END AS stale`,
       [last, days]

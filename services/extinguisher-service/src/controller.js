@@ -51,8 +51,10 @@ const list = asyncHandler(async (req, res) => {
     type: { enum: TYPES },
     q: { maxLen: 80, type: 'text' },
     expiringInDays: { type: 'int', custom: (n) => n >= 0 && n <= 3650, message: 'must be between 0 and 3650' },
+    limit: { type: 'int', custom: (n) => n > 0 && n <= 100 },
+    offset: { type: 'int', custom: (n) => n >= 0 },
   });
-  const { status, type, q, expiringInDays } = qd;
+  const { status, type, q, expiringInDays, limit = 10, offset = 0 } = qd;
   const where = [];
   const params = [];
   if (status) { params.push(status); where.push(`status = $${params.length}`); }
@@ -65,11 +67,18 @@ const list = asyncHandler(async (req, res) => {
     params.push(expiringInDays);
     where.push(`expiry_date <= (CURRENT_DATE + ($${params.length} || ' days')::interval) AND expiry_date >= CURRENT_DATE`);
   }
+
+  const countSql = `SELECT COUNT(*) FROM fire_extinguishers ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`;
+  const { rows: countRows } = await query(countSql, params);
+  const total = parseInt(countRows[0].count, 10);
+
+  const sqlParams = [...params, limit, offset];
   const sql = `SELECT * FROM fire_extinguishers
                ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-               ORDER BY created_at DESC`;
-  const { rows } = await query(sql, params);
-  res.json({ count: rows.length, extinguishers: rows.map(toDto) });
+               ORDER BY created_at DESC
+               LIMIT $${sqlParams.length - 1} OFFSET $${sqlParams.length}`;
+  const { rows } = await query(sql, sqlParams);
+  res.json({ total, limit, offset, count: rows.length, extinguishers: rows.map(toDto) });
 });
 
 // GET /extinguishers/:id

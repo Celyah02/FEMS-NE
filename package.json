@@ -18,7 +18,7 @@
     "db:migrate": "npm --workspace fems-db run migrate",
     "db:seed": "npm --workspace fems-db run seed",
     "db:reset": "npm --workspace fems-db run reset",
-    "dev:backend": "powershell -ExecutionPolicy Bypass -File scripts/dev-backend.ps1",
+    "dev:backend": "\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -ExecutionPolicy Bypass -File scripts/dev-backend.ps1",
     "dev:frontend": "npm --workspace fems-frontend run dev",
     "build:frontend": "npm --workspace fems-frontend run build",
     "start:frontend": "npm --workspace fems-frontend run start",
@@ -28,7 +28,8 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "14.2.5"
+    "@next/swc-win32-x64-msvc": "14.2.5",
+    "nodemailer": "^8.0.10"
   },
   "devDependencies": {
     "jest": "^29.7.0",

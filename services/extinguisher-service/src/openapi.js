@@ -42,9 +42,11 @@ module.exports = {
           { name: 'type', in: 'query', schema: { type: 'string', enum: ['water', 'co2', 'foam', 'dry_chemical'] } },
           { name: 'q', in: 'query', description: 'Search serial/location', schema: { type: 'string' } },
           { name: 'expiringInDays', in: 'query', schema: { type: 'integer' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
         ],
         responses: {
-          200: { description: 'List', content: { 'application/json': { schema: { type: 'object', properties: { count: { type: 'integer' }, extinguishers: { type: 'array', items: { $ref: '#/components/schemas/Extinguisher' } } } } } } },
+          200: { description: 'List', content: { 'application/json': { schema: { type: 'object', properties: { total: { type: 'integer' }, limit: { type: 'integer' }, offset: { type: 'integer' }, count: { type: 'integer' }, extinguishers: { type: 'array', items: { $ref: '#/components/schemas/Extinguisher' } } } } } } },
           400: { description: 'Bad request', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } } },
         },
       },

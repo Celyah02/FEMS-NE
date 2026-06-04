@@ -16,6 +16,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { query, ApiError, asyncHandler, validateBody } = require('@fems/shared');
 const tokens = require('./tokenService');
+const { sendResetEmail } = require('./emailService');
 
 const publicUser = (u) => ({
   id: u.id,
@@ -95,22 +96,11 @@ const logout = asyncHandler(async (req, res) => {
 
 // POST /auth/forgot-password
 /**
- * Issue a password reset token for account recovery.
- *
- * IMPORTANT: This is a DEMO implementation. For production:
- * - Send the reset token via secure email instead of returning in response
- * - Use a dedicated email service (SendGrid, AWS SES, etc.)
- * - Never expose the token in logs or API responses
- * - Implement token expiry cleanup to prevent DB bloat
- *
- * Current behavior (demo-only):
- * - Returns a 24-character hex token in the response
- * - Token expires after 1 hour
- * - Generic response for security (doesn't leak if email exists)
+ * Issue a password reset token for account recovery and send it via email.
  */
 const forgotPassword = asyncHandler(async (req, res) => {
   const data = validateBody(req.body, { email: { required: true, type: 'email', maxLen: 255, lowercase: true } });
-  const { rows } = await query('SELECT id FROM users WHERE lower(email) = lower($1)', [data.email]);
+  const { rows } = await query('SELECT id, email FROM users WHERE lower(email) = lower($1)', [data.email]);
 
   const generic = { message: 'If that account exists, a reset token has been issued.' };
   if (!rows.length) return res.json(generic); // do not leak which emails exist
@@ -121,7 +111,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
     'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES ($1,$2,$3)',
     [rows[0].id, tokens.sha256(rawToken), expiresAt]
   );
-  res.json({ ...generic, resetToken: rawToken }); // demo-only field
+
+  // Send the actual email. We don't await this if we want to return the response 
+  // immediately, but it's safer to await it to catch errors.
+  await sendResetEmail(rows[0].email, rawToken);
+
+  res.json(generic);
 });
 
 // POST /auth/reset-password

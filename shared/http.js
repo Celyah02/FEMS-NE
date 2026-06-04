@@ -30,9 +30,10 @@ const errorHandler = (err, req, res, _next) => {
   if (err.code === '23505') {
     return res.status(409).json({ error: { message: 'A record with that value already exists.', detail: err.detail } });
   }
-  // Postgres foreign-key / check violations
-  if (err.code === '23503' || err.code === '23514' || err.code === '22P02') {
-    return res.status(400).json({ error: { message: 'Invalid reference or value.', detail: err.detail || err.message } });
+  // Postgres foreign-key / check / not-null / invalid format violations
+  const badRequestCodes = ['23502', '23503', '23514', '22P02', '22007', '22008'];
+  if (badRequestCodes.includes(err.code)) {
+    return res.status(400).json({ error: { message: 'Invalid reference or value.', detail: err.detail || err.message, code: err.code } });
   }
 
   const status = err.status || 500;
